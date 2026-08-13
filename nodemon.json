@@ -1,0 +1,5 @@
+
+{
+  "watch": ["main.js", "controller", "models", "routes"],
+  "ignore": ["node_modules", "public", "*.log"]
+}
