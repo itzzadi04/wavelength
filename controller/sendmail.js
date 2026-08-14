@@ -32,7 +32,7 @@ const sendVerificationEmail = async (to, code) => {
       `
     });
   } catch (err) {
-    console.error('Failed to send verification email   :', err);
+    console.error('Failed to send verification email:', err);
     throw err; 
   }
 };
