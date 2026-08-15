@@ -4,6 +4,7 @@ const express = require(`express`)
 const path = require(`path`)
 const cors = require(`cors`)
 const app = express()
+const cookieParser=require("cookie-parser")
 const authRoutes = require('./routes/authroutes');
 
 const { Server } = require("socket.io");
@@ -12,63 +13,49 @@ const mongoose = require(`mongoose`)
 const User = require(`./models/users`)
 const { handlejoinroom, handlechat, handleexit } = require(`./controller/chat`)
 
+const { socketauth } = require('./middleware/checksocketauth');
+
 async function main() {
 
   app.use(express.json())
   app.use(cors({
-    origin: "*", 
+    origin: process.env.CLIENT_URL,
     credentials: true
   }));
 
   app.use(express.urlencoded({ extended: false }))
+  app.use(cookieParser()) 
   app.use(`/api`, router)
   app.use(express.static("public"));
   app.use('/api/auth', authRoutes);
 
-  
   await mongoose.connect(process.env.MONGO_URI).then(console.log(`db connected`))
- 
+
   const server = http.createServer(app)
-  
 
   const PORT = process.env.PORT || 5000
   server.listen(PORT, () => console.log(`listening on port ${PORT}`))
-  
+
   const io = new Server(server, {
     cors: {
-      origin: "*",
-      methods: ["GET", "POST"]
+      origin: process.env.CLIENT_URL,
+      methods: ["GET", "POST"],
+      credentials: true
     }
   })
 
-  //assign user
-  io.on('connection', (socket) => {
-    console.log(`someone detected`)
-    socket.on('identify', async (username) => {
-      socket.on('disconnect', (reason) => {
-        console.log('SOCKET DISCONNECTED:', reason);
-      });
-      if (socket.data.identified) {
-        socket.emit('identified', { msg: 'Already identified' });
-        return;
-      }
-      try {
-        const user = await User.findOne({ name: username });
-        if (!user) {
-          socket.emit('error', { msg: 'User not found in DB' });
-          return;
-        }
-        socket.data.userId = user._id;
-        socket.data.identified = true; 
-        socket.emit('identified', { msg: 'User verified', user });
+  io.use(socketauth);
 
-        handlejoinroom(socket, io);
-        handlechat(socket, io);
-        handleexit(socket, io);
-      } catch (err) {
-        console.error(err);
-        socket.emit('error', { msg: 'DB error during identify' });
-      }
+  io.on('connection', (socket) => {
+    console.log(`${socket.data.user.name} connected`);
+    socket.emit('identified', { msg: 'User verified', user: socket.data.user });
+
+    handlejoinroom(socket, io);
+    handlechat(socket, io);
+    handleexit(socket, io);
+
+    socket.on('disconnect', (reason) => {
+      console.log(`${socket.data.user.name} disconnected:`, reason);
     });
   });
 }
