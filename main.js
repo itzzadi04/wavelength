@@ -4,6 +4,7 @@ const express = require(`express`)
 const path = require(`path`)
 const cors = require(`cors`)
 const app = express()
+const authRoutes = require('./routes/authroutes');
 
 const { Server } = require("socket.io");
 const { router } = require(`./routes/routes`)
@@ -22,10 +23,11 @@ async function main() {
   app.use(express.urlencoded({ extended: false }))
   app.use(`/api`, router)
   app.use(express.static("public"));
+  app.use('/api/auth', authRoutes);
 
-  await mongoose.connect(process.env.MONGO_URI)
-  console.log(`db connected`)
   
+  await mongoose.connect(process.env.MONGO_URI).then(console.log(`db connected`))
+ 
   const server = http.createServer(app)
   
 
