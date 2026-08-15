@@ -1,17 +1,40 @@
-const User = require(`../models/users`)
-const settingusername = async (req,res)=>{
-    try{
-    const {username} = req.body
+const User = require("../models/users");
+const bcrypt = require("bcrypt");
+  
 
-    if(!username){
-    return res.json({error:`should have a username`})
+const { sendVerificationEmail } = require(`./sendmail`)
+
+
+
+const settingUsername = async (req, res) => {
+  try {
+    const saltRounds = 10;
+    const { username, password, email} = req.body;
+
+    if (!username || !password || !email) {
+      return res.status(400).json({ error: "Submit both fields" });
     }
-    const newUser= await User.create({name:username})
+   
+
+ 
+
+    // Hash the password with await
+    const hashedPassword = await bcrypt.hash(password, saltRounds);
+    //create user
+    const newUser = await User.create({
+      name: username,
+      password: hashedPassword,
+      email: email,
+     
+    });
+
     return res.status(201).json({
       message: "User created successfully",
-      user: newUser,
+      user: { email: newUser.email, name: newUser.name },
     });
-    }catch(e){res.json({error:e.message})}
-}
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+};
 
-module.exports={settingusername};
+module.exports = { settingUsername };
