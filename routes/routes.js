@@ -1,10 +1,12 @@
 const express = require(`express`)
+const router = express.Router()
 
 const {createchatroom}= require(`../controller/createchatroom.js`)
 
-const router = express.Router()
+const { checkauth } = require('../middleware/checkauth');
 
 
-router.post(`/createchatroom`,createchatroom)
+
+   router.post(`/createchatroom`, checkauth, createchatroom)
 
 module.exports= {router};

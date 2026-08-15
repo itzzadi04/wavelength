@@ -4,7 +4,7 @@ const Messages = require(`../models/message`)
 
 
 function handlejoinroom(socket,io) {
-  socket.on('joinRoom', async (roomId, userId) => {
+  socket.on('joinRoom', async (roomId) => {
     try {
       const room = await Room.findOne({ roomid:roomId });
       if (!room) {
@@ -12,10 +12,17 @@ function handlejoinroom(socket,io) {
         return;
       }
 
+      const userId = socket.data.userId;
+
       socket.join(roomId);
       room.members.push(userId); 
       await room.save();
 
+      const history = await Messages.find({ chatroom: room._id })
+      .sort({ createdAt: 1 })
+      .populate('createdby', 'name');
+
++      socket.emit('roomHistory', history);
       io.to(roomId).emit('userJoined', { userId });
     } catch (err) {
       console.error(err);
@@ -53,13 +60,15 @@ function handlechat(socket, io) {
 }
 
 function handleexit(socket,io) {
-  socket.on('leaveRoom', async (roomId, userId) => {
+  socket.on('leaveRoom', async (roomId) => {
     try {
       const room = await Room.findOne({ roomid:roomId });
       if (!room) {
         socket.emit('error', { msg: 'Room not found' });
         return;
       }
+
+      const userId = socket.data.userId;
 
       socket.leave(roomId);
       room.members.pull(userId); 
