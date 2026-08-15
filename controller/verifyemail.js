@@ -7,9 +7,9 @@ const verifyEmail = async (req,res)=>{
 
     const currentuser= await User.findOne({email:useremail});
     if(!currentuser){return res.json({"message":"user not found"})}
-    ///if (Date.now() > currentuser.verificationCodeExpires) {
-    // return res.status(400).json({ message: "code expired, request a new one" });
-    //};
+    if (Date.now() > currentuser.verificationCodeExpires) {
+    return res.status(400).json({ message: "code expired, request a new one" });
+    };
     const original_otp = currentuser.verificationCode ;
     
     if(!(userotp==original_otp)){
