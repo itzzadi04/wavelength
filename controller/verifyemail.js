@@ -9,6 +9,7 @@ const verifyEmail = async (req,res)=>{
     if(!currentuser){return res.json({"message":"user not found"})}
     if (Date.now() > currentuser.verificationCodeExpires) {
     return res.status(400).json({ message: "code expired, request a new one" });
+    User.deleteOne({email:useremail});
     };
     const original_otp = currentuser.verificationCode ;
     
