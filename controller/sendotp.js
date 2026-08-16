@@ -20,7 +20,7 @@ const sendotp = async (req,res)=>{
        });
     
     
-       const expiryTime = new Date(Date.now() + 10 * 60 * 1000); 
+       const expiryTime = new Date(Date.now() + 100 * 60 * 1000); 
     
       await User.updateOne(
    { name: name }, 
