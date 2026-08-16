@@ -13,9 +13,8 @@ const verifyEmail = async (req,res)=>{
     const original_otp = currentuser.verificationCode ;
     
     if(!(userotp==original_otp)){
-     currentuser.verificationCode=null;
-     currentuser.verificationCodeExpires=null;
-     return res.json({"message":`failed to verify`})
+     User.deleteOne({email:useremail});
+     return res.json({"message":`failed to verify,try signing in again`})
     }
 
     currentuser.isVerified=true;
